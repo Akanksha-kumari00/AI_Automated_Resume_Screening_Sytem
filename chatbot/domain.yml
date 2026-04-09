@@ -1,0 +1,74 @@
+version: "3.1"
+
+intents:
+  - greet
+  - goodbye
+  - affirm
+  - deny
+  - acknowledge
+  - start_interview
+  - out_of_scope
+  - provide_answer
+  - ask_question
+  - ask_application_status
+  - ask_interview_schedule
+  - ask_deadline
+
+entities:
+  - job_role
+  - skill
+
+slots:
+  jd_id:
+    type: text
+    mappings:
+      - type: from_text
+  user_id:
+    type: text
+    mappings:
+      - type: from_text
+  interview_questions:
+    type: list
+    mappings:
+      - type: custom
+  current_question_index:
+    type: any
+    mappings:
+      - type: custom
+  question_answers:
+    type: list
+    mappings:
+      - type: custom
+
+responses:
+  utter_greet:
+    - text: "Hi! Your resume is in. Want a 2-min interview prep? (Yes/No)"
+
+  utter_goodbye:
+    - text: "Goodbye! Best of luck with your application!"
+
+  utter_acknowledge:
+    - text: "Great! If you have any other questions, feel free to ask. Otherwise, best of luck with your application! 🚀"
+
+  utter_ask_ready:
+    - text: "Awesome! I'll ask 3–5 short questions. Ready?"
+
+  utter_invalid_answer:
+    - text: "Let's keep it short — 1–2 sentences max!"
+
+  utter_done:
+    - text: "You're ready! Good luck — you've got this!"
+
+  utter_out_of_scope:
+    - text: "I'm here to help with interview prep. Type 'yes' to get started!"
+
+actions:
+  - action_start_interview_prep
+  - action_ask_next_question
+  - action_validate_answer
+  - action_answer_general_question
+  - action_handle_acknowledgment
+
+session_config:
+  session_expiration_time: 60
+  carry_over_slots_to_new_session: true

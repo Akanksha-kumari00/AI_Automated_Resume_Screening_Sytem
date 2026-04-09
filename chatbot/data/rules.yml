@@ -1,0 +1,37 @@
+version: "3.1"
+rules:
+- rule: Say goodbye anytime
+  steps:
+  - intent: goodbye
+  - action: utter_goodbye
+
+- rule: Ask next question after validation
+  condition:
+  - slot_was_set:
+    - current_question_index
+  steps:
+  - action: action_ask_next_question
+- rule: Answer general questions
+  steps:
+  - intent: ask_question
+  - action: action_answer_general_question
+
+- rule: Answer application status questions
+  steps:
+  - intent: ask_application_status
+  - action: action_answer_general_question
+
+- rule: Answer interview schedule questions
+  steps:
+  - intent: ask_interview_schedule
+  - action: action_answer_general_question
+
+- rule: Answer deadline questions
+  steps:
+  - intent: ask_deadline
+  - action: action_answer_general_question
+
+- rule: Start interview on simple affirmation
+  steps:
+  - intent: affirm
+  - action: action_start_interview_prep

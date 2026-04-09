@@ -1,0 +1,27 @@
+fastapi[all]
+uvicorn
+gunicorn
+python-dotenv
+supabase
+python-jose[cryptography]
+python-multipart
+pdfplumber
+python-docx
+pytesseract
+opencv-python
+# Pin numpy to <2 due to TensorFlow/compiled extensions incompatibilities
+numpy<2
+# Prefer PyTorch-only transformers to avoid TF import
+transformers
+sentence-transformers
+fairlearn
+torch
+pydantic
+# Enhanced NLP and fuzzy matching
+rapidfuzz
+spacy
+# Explainability
+lime
+scikit-learn
+# Email notifications
+python-decouple
