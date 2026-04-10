@@ -406,6 +406,7 @@ function HrDashboard() {
             const response = await axios.get(`${API_URL}/hr/jobs`, {
               headers: { Authorization: `Bearer ${token}` },
             });
+            console.log("HR JOBS DATA:", response.data);
             let jobs = response.data;
             if (!Array.isArray(jobs)) {
               console.error('Expected jobs array but got:', jobs);

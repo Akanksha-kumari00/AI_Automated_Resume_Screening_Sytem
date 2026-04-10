@@ -357,7 +357,7 @@ function CandidateDashboard() {
     }
   }, [applications, jobs]);
 
-  const handleUpload = async (jd_id) => {
+  /*const handleUpload = async (job) => {
 
     // Check if already applied
     if (hasAlreadyApplied(jd_id)) {
@@ -386,11 +386,11 @@ function CandidateDashboard() {
     const formData = new FormData();
     formData.append('file', file);
     try {
-      console.log('Sending request to:', `${API_URL}/upload-resume/${jd_id}`);
+      console.log('Sending request to:', `${API_URL}/upload-resume/${job.job_id}`);
       console.log('Authorization header:', `Bearer ${usedToken.substring(0, 20)}...`);
       const resp = await withAuth(async (token) => (
         axios.post(
-          `${API_URL}/upload-resume/${jd_id}`,
+          `${API_URL}/upload-resume/${job.job_id}`,
           formData,
           {
             headers: {
@@ -429,8 +429,66 @@ function CandidateDashboard() {
     } finally {
       setUploadingJob(null);
     }
-  };
+  };*/
+  const handleUpload = async (job) => {
 
+  const jd_id = job.job_id; // ✅ FIX HERE (IMPORTANT)
+  console.log("jobs: ",job)
+
+  if (hasAlreadyApplied(jd_id)) {
+    setAlertMessage('You have already applied to this job.');
+    setAlertType('error');
+    setShowAlertModal(true);
+    return;
+  }
+
+  const usedToken = getAccessToken();
+
+  if (!usedToken) {
+    setAlertMessage('No token found. Please login again.');
+    setAlertType('error');
+    setShowAlertModal(true);
+    navigate('/login');
+    return;
+  }
+
+  const file = selectedFiles[jd_id];
+
+  if (!file) {
+    setAlertMessage('Please select a file first.');
+    setAlertType('error');
+    setShowAlertModal(true);
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const resp = await axios.post(
+      `${API_URL}/upload-resume/${jd_id}`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${usedToken}`,
+        },
+      }
+    );
+
+    setAlertMessage('Resume uploaded successfully!');
+    setAlertType('success');
+    setShowAlertModal(true);
+
+  } catch (error) {
+    console.error('Upload error:', error.response?.data || error.message);
+
+    setAlertMessage(
+      error.response?.data?.detail || 'Upload failed'
+    );
+    setAlertType('error');
+    setShowAlertModal(true);
+  }
+};
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('access_token');
@@ -697,9 +755,9 @@ function CandidateDashboard() {
                     {notifications.map((n, idx) => (
                       <div className="dashboard-notification-item" key={n.id || n.notification_id || idx}>
                         <div className={`dashboard-notification-icon ${n.type === 'selected' ? 'notif-selected' :
-                            n.type === 'rejected' ? 'notif-rejected' :
-                              n.type === 'pending' ? 'notif-pending' :
-                                n.type === 'new_job' ? 'notif-new-job' : 'notif-generic'}`}></div>
+                          n.type === 'rejected' ? 'notif-rejected' :
+                            n.type === 'pending' ? 'notif-pending' :
+                              n.type === 'new_job' ? 'notif-new-job' : 'notif-generic'}`}></div>
                         <div className="dashboard-notification-content">
                           <div className="dashboard-notification-text">{n.message || n.text || n.title || 'Notification'}</div>
                           {n.created_at && (
@@ -864,7 +922,7 @@ function CandidateDashboard() {
                     jobs.map((job) => {
                       const alreadyApplied = hasAlreadyApplied(job.jd_id);
                       return (
-                        <tr key={job.jd_id}>
+                        <tr key={job.job_id}>
                           <td><strong>{job.title}</strong></td>
                           <td>{job.description}</td>
                           <td>{Array.isArray(job.requirements) ? job.requirements.join(', ') : job.requirements}</td>
@@ -886,15 +944,13 @@ function CandidateDashboard() {
                                   className="dashboard-file-input"
                                   type="file"
                                   accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
-                                  onChange={handleFileChange(job.jd_id)}
+                                  onChange={handleFileChange(job.job_id)}
                                 />
                                 <button
                                   onClick={() => {
-                                    console.log("FULL JOB:", job);
-                                    console.log("job.id:", job.id);
-                                    console.log("job.jd_id:", job.jd_id);
 
-                                    handleUpload(job.id || job.jd_id);
+
+                                    handleUpload(job);
                                   }}
                                 >
                                   Upload
@@ -978,9 +1034,9 @@ function CandidateDashboard() {
                 {notifications.map((n, idx) => (
                   <div className="dashboard-notification-item" key={n.id || n.notification_id || idx}>
                     <div className={`dashboard-notification-icon ${n.type === 'selected' ? 'notif-selected' :
-                        n.type === 'rejected' ? 'notif-rejected' :
-                          n.type === 'pending' ? 'notif-pending' :
-                            n.type === 'new_job' ? 'notif-new-job' : 'notif-generic'}`}></div>
+                      n.type === 'rejected' ? 'notif-rejected' :
+                        n.type === 'pending' ? 'notif-pending' :
+                          n.type === 'new_job' ? 'notif-new-job' : 'notif-generic'}`}></div>
                     <div className="dashboard-notification-content">
                       <div className="dashboard-notification-text">{n.message || n.text || n.title || 'Notification'}</div>
                       {n.created_at && (
