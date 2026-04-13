@@ -432,7 +432,7 @@ function CandidateDashboard() {
   };*/
   const handleUpload = async (job) => {
 
-  const jd_id = job.job_id; // ✅ FIX HERE (IMPORTANT)
+  const jd_id = job.jd_id; // ✅ FIX HERE (IMPORTANT)
   console.log("jobs: ",job)
 
   if (hasAlreadyApplied(jd_id)) {
@@ -944,7 +944,7 @@ function CandidateDashboard() {
                                   className="dashboard-file-input"
                                   type="file"
                                   accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
-                                  onChange={handleFileChange(job.job_id)}
+                                  onChange={handleFileChange(job.jd_id)}
                                 />
                                 <button
                                   onClick={() => {

@@ -755,6 +755,8 @@ async def upload_resume(
                         skill_match_count += 1
         
         # Use service role client (bypasses RLS) - user already authenticated via get_current_user
+        logging.info(f"[DEBUG] user object: {user}")
+        logging.info(f"[DEBUG] user.id: {user.id}")
         resume_data = {
             "user_id": user.id,
             "jd_id": jd_id,
