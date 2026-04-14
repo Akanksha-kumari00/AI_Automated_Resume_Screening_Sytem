@@ -606,11 +606,13 @@ async def refresh_token_endpoint(body: RefreshRequest):
 async def create_job(job: dict, user=Depends(get_current_user)):
     try:
         data = {
-            "hr_user_id": user.id,
-            "title": job.get("title"),
-            "description": job.get("description"),
-            "requirements": job.get("requirements", []),
-            "status": "open"
+           "hr_user_id": user.id,
+           "title": job.get("title"),
+           "description": job.get("description"),
+           "requirements": job.get("requirements", []),
+           "deadline": job.get("deadline"),
+           "weights": job.get("weights", {}),
+           "status": "open"
         }
 
         res = supabase_service.table("job_descriptions").insert(data).execute()
