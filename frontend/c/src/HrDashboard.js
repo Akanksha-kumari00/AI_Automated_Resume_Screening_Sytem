@@ -308,19 +308,19 @@ function HrDashboard() {
     };
   }, [showProfileDropdown]);
 
-  // Utility function to format date from yyyy-mm-dd to dd/mm/yyyy for display
-  const formatDateForDisplay = (dateStr) => {
-    if (!dateStr) return '';
-    // Split the date string to avoid timezone issues
-    const parts = dateStr.split('-');
-    if (parts.length === 3) {
-      const year = parts[0];
-      const month = parts[1];
-      const day = parts[2];
-      return `${day}/${month}/${year}`;
-    }
-    return dateStr;
-  };
+ // Utility function to format date from yyyy-mm-dd to dd/mm/yyyy for display
+const formatDateForDisplay = (dateStr) => {
+  if (!dateStr) return '';
+  const datePart = dateStr.split('T')[0]; // Remove time part if present
+  const parts = datePart.split('-');
+  if (parts.length === 3) {
+    const year = parts[0];
+    const month = parts[1];
+    const day = parts[2];
+    return `${day}/${month}/${year}`;
+  }
+  return dateStr;
+};
 
   // Utility: prefer profile name, else prettified email, else id
   const formatCandidateName = (candidateData) => {
