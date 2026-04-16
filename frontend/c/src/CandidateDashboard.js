@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import CustomChatbot from './CustomChatbot';
 import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 import API_URL from './config';
@@ -1439,8 +1438,6 @@ function CandidateDashboard() {
           </div>
         )}
 
-        {/* Chatbot: Show only after the candidate has uploaded at least one resume */}
-        {(CHATBOT_ALWAYS_VISIBLE || canShowChatbot) && <CustomChatbot />}
 
         {/* Password Change Modal */}
         {showPasswordModal && (
