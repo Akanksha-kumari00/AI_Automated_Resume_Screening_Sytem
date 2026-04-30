@@ -478,6 +478,7 @@ function CandidateDashboard() {
     setAlertMessage('Resume uploaded successfully!');
     setAlertType('success');
     setShowAlertModal(true);
+    setApplications(prev => [...prev, { jd_id: jd_id, status: 'submitted' }]);
 
   } catch (error) {
     console.error('Upload error:', error.response?.data || error.message);
@@ -914,6 +915,7 @@ function CandidateDashboard() {
                     <th>Title</th>
                     <th>Description</th>
                     <th>Requirements</th>
+                    
                     <th>Upload Resume</th>
                   </tr>
                 </thead>
@@ -926,6 +928,13 @@ function CandidateDashboard() {
                           <td><strong>{job.title}</strong></td>
                           <td>{job.description}</td>
                           <td>{Array.isArray(job.requirements) ? job.requirements.join(', ') : job.requirements}</td>
+
+                          <td>
+                            {job.deadline
+                              ? <span style={{ whiteSpace: 'nowrap' }}>{formatDateSafe(job.deadline)}</span>
+                              : <span style={{ color: '#9ca3af' }}>—</span>}
+                          </td>
+                          
                           <td>
                             {alreadyApplied ? (
                               <div style={{
@@ -998,7 +1007,7 @@ function CandidateDashboard() {
                           ? app.job_descriptions.requirements.join(', ')
                           : app.job_descriptions.requirements)
                         : (app.job_descriptions?.description || '—');
-                      const applied = formatDateSafe(app.created_at) || '—';
+                      const applied = formatDateSafe(app.applied_at) || '—';
                       const rawStatus = app.resumes?.decision || app.status || 'submitted';
                       const meta = getApplicationStatusMeta(rawStatus);
                       return (
