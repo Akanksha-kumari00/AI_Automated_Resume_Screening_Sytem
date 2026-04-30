@@ -96,16 +96,16 @@ function CandidateDashboard() {
 
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   // Prevent back navigation from dashboard
-  //React.useEffect(() => {
+  React.useEffect(() => {
     if (window.history && window.history.pushState) {
       window.history.pushState(null, '', window.location.href);
       const handlePopState = () => {
         window.history.pushState(null, '', window.location.href);
       };
-   // window.addEventListener('popstate', handlePopState);
-   // return () => window.removeEventListener('popstate', handlePopState);
-    //}
-  //}, []);
+      window.addEventListener('popstate', handlePopState);
+      return () => window.removeEventListener('popstate', handlePopState);
+    }
+  }, []);
 
   //const CHATBOT_ALWAYS_VISIBLE = false;
 
@@ -349,7 +349,7 @@ function CandidateDashboard() {
       return job ? job.status !== 'closed' : true;
     });
 
-    setCanShowChatbot(hasResume && hasApps && openApp);
+    //setCanShowChatbot(hasResume && hasApps && openApp);
 
     if (!hasApps) {
       localStorage.removeItem('current_jd_id');
@@ -914,7 +914,6 @@ function CandidateDashboard() {
                     <th>Title</th>
                     <th>Description</th>
                     <th>Requirements</th>
-                    <th>Deadline</th>
                     <th>Upload Resume</th>
                   </tr>
                 </thead>
@@ -923,21 +922,10 @@ function CandidateDashboard() {
                     jobs.map((job) => {
                       const alreadyApplied = hasAlreadyApplied(job.jd_id);
                       return (
-                        <tr key={job.jd_id || job.job_id}>
+                        <tr key={job.job_id}>
                           <td><strong>{job.title}</strong></td>
                           <td>{job.description}</td>
-                          <td>
-                            {Array.isArray(job.requirements)
-                              ? <ul style={{ margin: 0, paddingLeft: '1.2rem' }}>
-                                  {job.requirements.map((r, i) => <li key={i}>{r}</li>)}
-                                </ul>
-                              : job.requirements}
-                          </td>
-                          <td>
-                            {job.deadline
-                              ? <span style={{ whiteSpace: 'nowrap' }}>{formatDateSafe(job.deadline)}</span>
-                              : <span style={{ color: '#9ca3af' }}>—</span>}
-                          </td>
+                          <td>{Array.isArray(job.requirements) ? job.requirements.join(', ') : job.requirements}</td>
                           <td>
                             {alreadyApplied ? (
                               <div style={{
@@ -975,7 +963,7 @@ function CandidateDashboard() {
                     })
                   ) : (
                     <tr>
-                      <td colSpan={5} className="dashboard-empty-state">
+                      <td colSpan={4} className="dashboard-empty-state">
                         <div className="dashboard-empty-state-icon">📋</div>
                         <div>No jobs available</div>
                       </td>
@@ -997,7 +985,6 @@ function CandidateDashboard() {
                     <tr>
                       <th>Job Title</th>
                       <th>Requirements</th>
-                      <th>Deadline</th>
                       <th>Application Date</th>
                       <th>Status</th>
                     </tr>
@@ -1011,21 +998,16 @@ function CandidateDashboard() {
                           ? app.job_descriptions.requirements.join(', ')
                           : app.job_descriptions.requirements)
                         : (app.job_descriptions?.description || '—');
-                      const deadline = app.job_descriptions?.deadline
-                        ? formatDateSafe(app.job_descriptions.deadline)
-                        : '—';
-                      // applied_at is set explicitly by backend; fall back to created_at
-                      const applied = formatDateSafe(app.applied_at || app.created_at) || '—';
+                      const applied = formatDateSafe(app.created_at) || '—';
                       const rawStatus = app.resumes?.decision || app.status || 'submitted';
                       const meta = getApplicationStatusMeta(rawStatus);
                       return (
                         <tr key={key}>
                           <td><strong>{title}</strong></td>
-                          <td style={{ maxWidth: '360px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          <td style={{ maxWidth: '400px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                             {requirements}
                           </td>
-                          <td style={{ whiteSpace: 'nowrap' }}>{deadline}</td>
-                          <td style={{ whiteSpace: 'nowrap' }}>{applied}</td>
+                          <td>{applied}</td>
                           <td>
                             <span className={`status-pill ${meta.className}`}>{meta.label}</span>
                           </td>
@@ -1458,7 +1440,7 @@ function CandidateDashboard() {
         )}
 
         {/* Chatbot: Show only after the candidate has uploaded at least one resume */}
-        {/*(CHATBOT_ALWAYS_VISIBLE || canShowChatbot) && <CustomChatbot /> */}
+        {/* (CHATBOT_ALWAYS_VISIBLE || canShowChatbot) && <CustomChatbot /> */}
 
         {/* Password Change Modal */}
         {showPasswordModal && (
@@ -1652,7 +1634,3 @@ function CandidateDashboard() {
 }
 
 export default CandidateDashboard;
-
-
-
-
