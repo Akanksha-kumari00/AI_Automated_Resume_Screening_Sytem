@@ -248,7 +248,6 @@ class UserPreferences(BaseModel):
 @app.get("/preferences")
 async def get_preferences(token: str = Depends(oauth2_scheme)):
     try:
-        # Resolve user from token
         res = supabase_auth.auth.get_user(token)
         user = res.user
         user_id = user.id
@@ -258,39 +257,25 @@ async def get_preferences(token: str = Depends(oauth2_scheme)):
             "job_alerts": True,
         }
 
-        # Try user_profiles first
         try:
             resp = supabase_service.table("user_profiles").select("email_notifications,status_updates,job_alerts").eq("user_id", user_id).limit(1).execute()
-            rows = getattr(resp, "data", []) or resp.get("data", [])
+            rows = getattr(resp, "data", []) or []
             if rows:
                 row = rows[0]
-                prefs["email_notifications"] = bool(row.get("email_notifications", prefs["email_notifications"]))
-                prefs["status_updates"] = bool(row.get("status_updates", prefs["status_updates"]))
-                prefs["job_alerts"] = bool(row.get("job_alerts", prefs["job_alerts"]))
+                prefs["email_notifications"] = bool(row.get("email_notifications", True))
+                prefs["status_updates"] = bool(row.get("status_updates", True))
+                prefs["job_alerts"] = bool(row.get("job_alerts", True))
         except Exception as e:
             logging.warning(f"[PREFERENCES] user_profiles read failed: {e}")
-
-        # Fallback to users table
-        try:
-            resp2 = supabase_service.table("users").select("email_notifications,status_updates,job_alerts").eq("user_id", user_id).limit(1).execute()
-            rows2 = getattr(resp2, "data", []) or resp2.get("data", [])
-            if rows2:
-                row2 = rows2[0]
-                prefs["email_notifications"] = bool(row2.get("email_notifications", prefs["email_notifications"]))
-                prefs["status_updates"] = bool(row2.get("status_updates", prefs["status_updates"]))
-                prefs["job_alerts"] = bool(row2.get("job_alerts", prefs["job_alerts"]))
-        except Exception as e:
-            logging.warning(f"[PREFERENCES] users read failed: {e}")
 
         return prefs
     except Exception as e:
         logging.exception("[PREFERENCES] get failed")
         raise HTTPException(status_code=500, detail=f"Failed to load preferences: {str(e)}")
-
+    
 @app.put("/preferences")
 async def set_preferences(prefs: UserPreferences, token: str = Depends(oauth2_scheme)):
     try:
-        # Resolve user from token
         res = supabase_auth.auth.get_user(token)
         user = res.user
         user_id = user.id
@@ -300,31 +285,23 @@ async def set_preferences(prefs: UserPreferences, token: str = Depends(oauth2_sc
             "job_alerts": prefs.job_alerts,
         }
 
-        updated = False
         try:
             resp = supabase_service.table("user_profiles").update(payload).eq("user_id", user_id).execute()
-            updated = True
+            rows = getattr(resp, "data", []) or []
+            if not rows:
+                # No existing profile row, insert one
+                supabase_service.table("user_profiles").insert({"user_id": user_id, **payload}).execute()
         except Exception as e:
             logging.warning(f"[PREFERENCES] user_profiles update failed: {e}")
-
-        try:
-            supabase_service.table("users").update(payload).eq("user_id", user_id).execute()
-            updated = True
-        except Exception as e:
-            logging.warning(f"[PREFERENCES] users update failed: {e}")
-
-        if not updated:
-            # Try insert into user_profiles if missing
-            try:
-                supabase_service.table("user_profiles").insert({"user_id": user_id, **payload}).execute()
-                updated = True
-            except Exception:
-                pass
+            raise HTTPException(status_code=500, detail="Failed to update preferences")
 
         return {"message": "Preferences updated", **payload}
+    except HTTPException:
+        raise
     except Exception as e:
         logging.exception("[PREFERENCES] set failed")
         raise HTTPException(status_code=500, detail=f"Failed to update preferences: {str(e)}")
+
 # Helpers
 def _signed_url_for(file_url: Optional[str]) -> Optional[str]:
     """Create a public URL for a stored object.
@@ -368,8 +345,7 @@ class RefreshRequest(BaseModel):
 async def signup(user: User):
     try:
         logging.info(f"Signup attempt: email={user.email}, role={user.role}, name={user.name}")
-        # Create user in Supabase Auth with role and name in user_metadata
-        # Using options.data for user_metadata as per Supabase v2 Python client
+        
         response = supabase_auth.auth.sign_up({
             "email": user.email,
             "password": user.password,
@@ -378,47 +354,22 @@ async def signup(user: User):
                 "email_redirect_to": None
             }
         })
+        
         logging.info(f"Signup response user: {response.user}")
         logging.info(f"Signup response session: {response.session}")
         
-        # Check if user was created (might be pending confirmation)
         if response.user:
-            # Create user in both user_profiles and users tables
-            try:
-                # Create in user_profiles table
-                supabase_service.table("user_profiles").insert({
-                    "user_id": response.user.id,
-                    "email": user.email,
-                    "role": user.role,
-                    "name": user.name
-                }).execute()
-                logging.info(f"User profile created for {user.email}")
-                
-                # Also create in users table (for foreign key constraints)
-                try:
-                    supabase_service.table("users").insert({
-                        "user_id": response.user.id,
-                        "email": user.email,
-                        "role": user.role,
-                        "name": user.name
-                    }).execute()
-                    logging.info(f"User created in users table for {user.email}")
-                except Exception as users_error:
-                    logging.warning(f"Could not create user in users table: {users_error}")
-                    
-            except Exception as profile_error:
-                logging.warning(f"Could not create user profile: {profile_error}")
-                # Continue anyway - the auth user was created successfully
-            
+            logging.info(f"User created successfully for {user.email} - trigger handles DB inserts")
             return {
                 "message": "User created successfully. Please check your email for confirmation." if not response.session else "User created successfully"
             }
         else:
             raise HTTPException(status_code=400, detail="Failed to create user")
+            
     except Exception as e:
         logging.exception(f"Signup error for {user.email}")
         raise HTTPException(status_code=400, detail=f"Signup failed: {str(e)}")
-
+    
 # Authentication
 async def get_current_user(token: str = Depends(oauth2_scheme)):
     try:
@@ -1071,7 +1022,7 @@ async def get_applications(user_id: str, user=Depends(get_current_user)):
                 resumes_map[r["resume_id"]] = r
 
         if jd_ids:
-            jobs_resp = supabase_service.table("job_descriptions").select("jd_id, title, description, requirements, deadline").in_("jd_id", jd_ids).execute()
+            jobs_resp = supabase_service.table("job_descriptions").select("jd_id, title, description").in_("jd_id", jd_ids).execute()
             for j in (jobs_resp.data or []):
                 jobs_map[j["jd_id"]] = j
 
@@ -1079,10 +1030,6 @@ async def get_applications(user_id: str, user=Depends(get_current_user)):
         for a in apps:
             a["resumes"] = resumes_map.get(a.get("resume_id"))
             a["job_descriptions"] = jobs_map.get(a.get("jd_id"))
-            # Preserve application date explicitly so the frontend can rely on it
-            # `created_at` comes from the applications row; expose it as `applied_at` too
-            if not a.get("applied_at"):
-                a["applied_at"] = a.get("created_at")
 
         logging.info(f"get_applications: enriched_apps_count={len(apps)}")
         if len(apps) > 0:
