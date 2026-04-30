@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import CustomChatbot from './CustomChatbot';
+//import CustomChatbot from './CustomChatbot';
 import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 import API_URL from './config';
@@ -96,21 +96,21 @@ function CandidateDashboard() {
 
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   // Prevent back navigation from dashboard
-  React.useEffect(() => {
+  //React.useEffect(() => {
     if (window.history && window.history.pushState) {
       window.history.pushState(null, '', window.location.href);
       const handlePopState = () => {
         window.history.pushState(null, '', window.location.href);
       };
-      window.addEventListener('popstate', handlePopState);
-      return () => window.removeEventListener('popstate', handlePopState);
-    }
-  }, []);
+   // window.addEventListener('popstate', handlePopState);
+   // return () => window.removeEventListener('popstate', handlePopState);
+    //}
+  //}, []);
 
-  const CHATBOT_ALWAYS_VISIBLE = false;
+  //const CHATBOT_ALWAYS_VISIBLE = false;
 
   // Derived flag: only show chatbot after at least one resume has been uploaded
-  const [canShowChatbot, setCanShowChatbot] = useState(false);
+  //const [canShowChatbot, setCanShowChatbot] = useState(false);
 
   const [jobs, setJobs] = useState([]);
   const [selectedFiles, setSelectedFiles] = useState({}); // map: jd_id -> File
@@ -1458,7 +1458,7 @@ function CandidateDashboard() {
         )}
 
         {/* Chatbot: Show only after the candidate has uploaded at least one resume */}
-        {(CHATBOT_ALWAYS_VISIBLE || canShowChatbot) && <CustomChatbot />}
+        {/*(CHATBOT_ALWAYS_VISIBLE || canShowChatbot) && <CustomChatbot /> */}
 
         {/* Password Change Modal */}
         {showPasswordModal && (
